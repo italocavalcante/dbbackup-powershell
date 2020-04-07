@@ -1,5 +1,5 @@
 ﻿$OPERATION=$args[0]
-$ORACLE_SID="ORCL"
+$ORACLE_SID=ORCL
 $RMAN_BACKUP_HOME_DIR="C:\backup"
 $RMAN_FILE_NAME=$env:TEMP+"\rman-arc"+$(Get-Date -Format "ddMMyyyy-HHmmss")+".rman"
 $RMAN_FILE_LOG=$RMAN_BACKUP_HOME_DIR+"\$ORACLE_SID\LOGS"
@@ -38,7 +38,7 @@ switch ($operation)
     $RMAN_FILE_LOG=$RMAN_BACKUP_HOME_DIR+"\$ORACLE_SID\LOGS\inc0-"+$(Get-Date -Format "ddMMyyyy-HHmmss")+".log";
                 Write-Output "run { " > $RMAN_FILE_NAME
                 Write-Output "     ALLOCATE CHANNEL C1 TYPE DISK MAXPIECESIZE 8G;" >> $RMAN_FILE_NAME
-                Write-Output "     BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 1 DATABASE FORMAT '$RMAN_LEVEL0_PATH/inc0_%T_set%s_piece%p_copy%c_%t.bkp' FILESPERSET 64;  " >> $RMAN_FILE_NAME
+                Write-Output "     BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 0 DATABASE FORMAT '$RMAN_LEVEL0_PATH/inc0_%T_set%s_piece%p_copy%c_%t.bkp' FILESPERSET 64;  " >> $RMAN_FILE_NAME
                 Write-Output "     RELEASE CHANNEL C1;" >> $RMAN_FILE_NAME
                 Write-Output " }" >> $RMAN_FILE_NAME
                         type $RMAN_FILE_NAME | rman target / msglog=$RMAN_FILE_LOG
