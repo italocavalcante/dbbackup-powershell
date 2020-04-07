@@ -17,7 +17,7 @@ mkdir $RMAN_CONTROL_PATH
 
 Write-Output "CONFIGURE BACKUP OPTIMIZATION ON;" | rman target /
 Write-Output "CONFIGURE CONTROLFILE AUTOBACKUP ON;" | rman target /
-Write-Output "CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '$RMAN_CONTROL_PATH\%F';" | rman target /
+Write-Output "CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '$RMAN_CONTROL_PATH\CONTROL_%F';" | rman target /
 }
 
 
@@ -35,7 +35,7 @@ function print_usage{
 switch ($operation)
 {
     "--level0" {
-        $RMAN_FILE_LOG=$RMAN_BACKUP_HOME_DIR+"\$ORACLE_SID\LOGS\inc0-"+$(Get-Date -Format "ddMMyyyy-HHmmss")+".log";
+    $RMAN_FILE_LOG=$RMAN_BACKUP_HOME_DIR+"\$ORACLE_SID\LOGS\inc0-"+$(Get-Date -Format "ddMMyyyy-HHmmss")+".log";
                 Write-Output "run { " > $RMAN_FILE_NAME
                 Write-Output "     ALLOCATE CHANNEL C1 TYPE DISK MAXPIECESIZE 8G;" >> $RMAN_FILE_NAME
                 Write-Output "     BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 1 DATABASE FORMAT '$RMAN_LEVEL0_PATH/inc0_%T_set%s_piece%p_copy%c_%t.bkp' FILESPERSET 64;  " >> $RMAN_FILE_NAME
@@ -45,7 +45,7 @@ switch ($operation)
                 rm $RMAN_FILE_NAME
                }
     "--level1" {
-        $RMAN_FILE_LOG=$RMAN_BACKUP_HOME_DIR+"\$ORACLE_SID\LOGS\inc1-"+$(Get-Date -Format "ddMMyyyy-HHmmss")+".log";
+    $RMAN_FILE_LOG=$RMAN_BACKUP_HOME_DIR+"\$ORACLE_SID\LOGS\inc1-"+$(Get-Date -Format "ddMMyyyy-HHmmss")+".log";
                 Write-Output "run { " > $RMAN_FILE_NAME
                 Write-Output "     ALLOCATE CHANNEL C1 TYPE DISK MAXPIECESIZE 8G;" >> $RMAN_FILE_NAME
                 Write-Output "     BACKUP AS COMPRESSED BACKUPSET INCREMENTAL LEVEL 1 DATABASE FORMAT '$RMAN_LEVEL1_PATH/inc1_%T_set%s_piece%p_copy%c_%t.bkp' FILESPERSET 64;  " >> $RMAN_FILE_NAME
@@ -68,10 +68,30 @@ switch ($operation)
                 rm $RMAN_FILE_NAME
                
           }
-    "--crosscheck" {"Starting backup crosscheck"}
-    "--configure" {"Starting envoironment configuration"
-    configure
-    }
+    "--crosscheck" {
+    $RMAN_FILE_LOG=$RMAN_BACKUP_HOME_DIR+"\$ORACLE_SID\LOGS\cross-"+$(Get-Date -Format "ddMMyyyy-HHmmss")+".log";
+                Write-Output "run { " > $RMAN_FILE_NAME
+                Write-Output "crosscheck backup;                      " >> $RMAN_FILE_NAME
+                Write-Output "crosscheck archivelog all;              " >> $RMAN_FILE_NAME
+                Write-Output "crosscheck backupset;                   " >> $RMAN_FILE_NAME
+                Write-Output "delete noprompt expired backup;         " >> $RMAN_FILE_NAME
+                Write-Output "delete noprompt expired archivelog all; " >> $RMAN_FILE_NAME
+                Write-Output "delete noprompt obsolete;               " >> $RMAN_FILE_NAME
+                Write-Output "}" >> $RMAN_FILE_NAME
+                        type $RMAN_FILE_NAME | rman target / msglog=$RMAN_FILE_LOG
+                rm $RMAN_FILE_NAME
+                   }
+    "--validate" {
+    $RMAN_FILE_LOG=$RMAN_BACKUP_HOME_DIR+"\$ORACLE_SID\LOGS\val-"+$(Get-Date -Format "ddMMyyyy-HHmmss")+".log";
+                Write-Output "run { " > $RMAN_FILE_NAME
+                Write-Output "BACKUP VALIDATE CHECK LOGICAL DATABASE;" >> $RMAN_FILE_NAME
+                Write-Output " }" >> $RMAN_FILE_NAME
+                        type $RMAN_FILE_NAME | rman target / msglog=$RMAN_FILE_LOG
+                rm $RMAN_FILE_NAME
+                }
+    "--configure" {"Starting environment configuration"
+                    configure
+                  }
         Default {
         print_usage
     }
